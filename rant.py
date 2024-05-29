@@ -1,5 +1,8 @@
+from utils import *
+from Notation import *
+
 '''
-rant() converts a given chord progression into an altered version, depending on the level input.
+rant() converts a given chord progression into an altered version, depending on the level input. It is also a wrapping function containing multiple 
 params:
     progression: a dictionary representing an 8-bar chord progression. An example would look like:
         if the represented chord_symbols = "Am7 D7 GM9 Cm7|F7 Bbmaj7 Am7|D7 Gm7|C7sus4 FMaj7":
@@ -25,25 +28,33 @@ returns:
     new_prog: the altered chord progression, represented in dictionary form.
 '''
 def rant(progression, level):
+    # Initialize notation instance
+    notation = Notation()
+    
+    # fit the progression into the format of Notation
+    
+    
     if level == 0:
         new_prog = simplifyChords(progression)
         return new_prog
     
+    
     if level == 1:
         return progression
     
-    
 
     if level == 2:
-        return progression
+        new_prog = substituteChords(progression)
+        return new_prog
     
     
     if level == 3:
-        return progression
+        new_prog = reharmonize(progression)
+        return new_prog
     
-    return new_prog
 
 
+# for level 1 process
 def simplifyChords(progression):
     new_prog = progression.copy()
     for key in progression.keys():
@@ -58,8 +69,6 @@ params:
 returns:
     triad: a triad version of the chord symbol.
 '''
-
-
 def turnIntoTriad(chord):
     root = chord[0]
     triad = ""
@@ -82,6 +91,30 @@ def turnIntoTriad(chord):
         triad = root + "M"
 
     return triad
+
+
+
+# for level 2 process
+'''
+Given a chord progression, generates another progression 
+with certain amount (defined via param) of chords substituted.
+
+params:
+    progression: a dictionary representing an 8-bar chord progression.
+    num: an integer that indicates how many chords will be substituted.
+
+returns: 
+    new_prog: post-substitution progression. Same amount of 
+'''
+def substituteChords(progression=dict, num=int):
+    new_prog = formatProgression(progression)
+    
+    
+    
+    
+# for level 3 process
+def reharmonize(progression):
+
 
 
 def main():
