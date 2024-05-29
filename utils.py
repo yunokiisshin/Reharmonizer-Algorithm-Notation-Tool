@@ -22,10 +22,8 @@ def formatChord(chord):
     return formatted_chord
 
 
-# creates a list of progression without the chords
-def constructRootList(progression):
 
-
+    
 def noteToInt(note):
     note_to_int_dict = {
         "C": 0,

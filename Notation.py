@@ -8,6 +8,7 @@ class Notation:
                           "hdim7", "minmaj7", "maj6", 
                           "min6", "9", "maj9", "min9", "sus4"]
         self.modifier = ["#", "b"]
+        self.no_chord = "N"
         self.natural = ["A", "B", "C", "D", "E", "F", "G"]
         self.intervals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
         self.chord_structures = {
@@ -112,12 +113,12 @@ class Notation:
 
 
 # Example usage
-notation = Notation()
-chord1 = notation.create_chord("C", "maj7")
-chord2 = notation.create_chord("D#", "min7", ["b3", "5", "b7", "9"], "5")
-parsed_chord = notation.parse_chord("D#:min7(b3,5,b7,9)/5")
+# notation = Notation()
+# chord1 = notation.create_chord("C", "maj7")
+# chord2 = notation.create_chord("D#", "min7", ["b3", "5", "b7", "9"], "5")
+# parsed_chord = notation.parse_chord("D#:min7(b3,5,b7,9)/5")
 
-print(chord1)  # Output: C:maj7
-print(chord2)  # Output: D#:min7(b3,5,b7,9)/5
-print(parsed_chord)  # Output: {'root': 'D#', 'shorthand': 'min7', 'degrees': ['b3', '5', 'b7', '9'], 'bass': '5'}
-print(notation.display_chord(parsed_chord))  # Output: D#:min7(b3,5,b7,9)/5
+# print(chord1)  # Output: C:maj7
+# print(chord2)  # Output: D#:min7(b3,5,b7,9)/5
+# print(parsed_chord)  # Output: {'root': 'D#', 'shorthand': 'min7', 'degrees': ['b3', '5', 'b7', '9'], 'bass': '5'}
+# print(notation.display_chord(parsed_chord))  # Output: D#:min7(b3,5,b7,9)/5

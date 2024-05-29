@@ -1,5 +1,5 @@
 from utils import *
-from Notation import *
+import random
 
 '''
 rant() converts a given chord progression into an altered version, depending on the level input. It is also a wrapping function containing multiple 
@@ -28,38 +28,37 @@ returns:
     new_prog: the altered chord progression, represented in dictionary form.
 '''
 def rant(progression, level):
-    # Initialize notation instance
-    notation = Notation()
     
     # fit the progression into the format of Notation
-    
+    formatted_progression = formatProgression(progression)
+    print(formatted_progression)
     
     if level == 0:
-        new_prog = simplifyChords(progression)
+        new_prog = simplifyChords(formatted_progression)
         return new_prog
-    
     
     if level == 1:
-        return progression
-    
+        return formatted_progression
 
     if level == 2:
-        new_prog = substituteChords(progression)
+        new_prog = substituteChords(formatted_progression)
         return new_prog
-    
     
     if level == 3:
-        new_prog = reharmonize(progression)
+        new_prog = reharmonize(formatted_progression)
         return new_prog
     
 
 
-# for level 1 process
+# for level 0 process
 def simplifyChords(progression):
     new_prog = progression.copy()
+    
     for key in progression.keys():
         new_prog[key] = [turnIntoTriad(item) for item in progression[key]]
     return new_prog
+
+
 
 '''
 Turns a given chord symbol into its simple triad variant.
@@ -70,50 +69,104 @@ returns:
     triad: a triad version of the chord symbol.
 '''
 def turnIntoTriad(chord):
-    root = chord[0]
-    triad = ""
-    
-    # Check for accidentals (sharp or flat)
-    if len(chord) > 1 and (chord[1] == '#' or chord[1] == 'b'):
-        root += chord[1]
-        remainder = chord[2:]
+    root = chord.split(":")[0]
+    modifier = chord.split(":")[1]
+    triad = root
+    if ("m" or "min") in modifier:
+        triad += ":min"
+    elif "aug" in modifier: 
+        triad += ":aug"
+    elif "dim" in modifier:
+        triad += ":dim"
     else:
-        remainder = chord[1:]
+        triad += ":maj"
     
-    # Determine chord quality and form the triad
-    if 'm' in remainder and ('maj' or 'Maj') not in remainder:
-        triad = root + "m"
-    elif 'aug' in remainder:
-        triad = root + "aug"
-    elif 'dim' in remainder:
-        triad = root + "dim"
-    else:
-        triad = root + "M"
-
     return triad
 
 
 
+    '''
+    Given a chord progression, generates another progression 
+    with certain amount (defined via param) of chords substituted.
+
+    params:
+        progression: a dictionary representing an 8-bar chord progression.
+        num: an integer that indicates how many chords will be substituted.
+
+    returns: 
+        new_prog: post-substitution progression. Same amount of 
+    '''
+
+
+
 # for level 2 process
-'''
-Given a chord progression, generates another progression 
-with certain amount (defined via param) of chords substituted.
+def substituteChords(progression, temperature=float):
+    new_prog = progression.copy()
+    
+    def tritoneSubstitution(chord):
+        root = chord.split(":")[0]
+        modifier = chord.split(":")[1]
+        tritone_root = getTritone(root)
+        return f"{tritone_root}:{modifier}"
+    
+    def getTritone(root):
+        # Mapping from root notes to their tritone counterparts
+        tritone_map = {
+            "C": "Gb", "C#": "G", "Db": "G", "D": "Ab", "D#": "A", "Eb": "A",
+            "E": "Bb", "F": "B", "F#": "C", "Gb": "C", "G": "Db", "G#": "D",
+            "Ab": "D", "A": "Eb", "A#": "E", "Bb": "E", "B": "F"
+        }
+        
+        if root in tritone_map:
+            return tritone_map[root]
+        else:
+            return root  # If not found in map, return the root as is
 
-params:
-    progression: a dictionary representing an 8-bar chord progression.
-    num: an integer that indicates how many chords will be substituted.
+    # Iterate over each bar in the progression
+    for bar in range(len(new_prog)):
+        for i, chord in enumerate(new_prog[str(bar)]):
+            root = chord.split(":")[0]
+            modifier = chord.split(":")[1]
+            # Check for tritone substitution conditions
+            if modifier == "7" or modifier == "9": 
+                altered_chord = tritoneSubstitution(chord)
+                # Replace the old chord with the new one
+                new_prog[str(bar)][i] = altered_chord
+    
+    return new_prog
+    
+    
 
-returns: 
-    new_prog: post-substitution progression. Same amount of 
-'''
-def substituteChords(progression=dict, num=int):
-    new_prog = formatProgression(progression)
-    
-    
-    
-    
 # for level 3 process
 def reharmonize(progression):
+    new_prog = progression.copy()
+    # Implement reharmonization logic
+    return new_prog
+
+
+
+
+        
+
+
+
+'''
+Given a chord progression, generates a list of unique root notes.
+params:
+    progression: a dictionary representing an 8-bar chord progression.
+    
+returns:
+    root_list: a list of unique root notes.
+'''
+def constructRootList(progression):
+    root_list = []
+    for key in progression.keys():
+        for chord in progression[key]:
+            root = chord.split(":")[0]
+            if root not in root_list:
+                root_list.append(root)
+    return root_list
+
 
 
 
@@ -128,10 +181,11 @@ def main():
             "6": ["Gm7", "C7sus4"],
             "7": ["FMaj7"]
         }
+    print("before: ")
+    print(progression)
     
-    new_prog = rant(progression, 0)
-    # when you do progression, 0, you get:
-    # {'0': ['Am'], '1': ['DM'], '2': ['GM'], '3': ['Cm', 'FM'], '4': ['BbM'], '5': ['Am', 'DM'], '6': ['Gm', 'CM'], '7': ['FM']}
+    new_prog = rant(progression, 2)
+    print("after: ")
     print(new_prog)
     return 
 
