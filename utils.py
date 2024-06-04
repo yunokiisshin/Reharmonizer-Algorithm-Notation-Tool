@@ -16,48 +16,13 @@ def formatChord(chord):
     else:
         remainder = chord[1:]
     
+    if "m" in remainder and ("maj" or "min") not in remainder:
+        remainder = remainder.replace("m", "min")
+    
+    if "M" in remainder and "Maj" not in remainder:
+        remainder = remainder.replace("M", "maj")
+    
     # Form the formatted chord
-    formatted_chord = root + ":" + remainder
+    formatted_chord = root + ":" + remainder.lower()
 
     return formatted_chord
-
-
-
-    
-def noteToInt(note):
-    note_to_int_dict = {
-        "C": 0,
-        "C#": 1, "Db": 1,
-        "D": 2,
-        "D#": 3, "Eb": 3,
-        "E": 4,
-        "F": 5,
-        "F#": 6, "Gb": 6,
-        "G": 7,
-        "G#": 8, "Ab": 8,
-        "A": 9,
-        "A#": 10, "Bb": 10,
-        "B": 11
-    }
-    
-    return note_to_int_dict.get(note, -1)  # Returns -1 if the note is not found
-
-
-
-def intToNote(number):
-    int_to_note_dict = {
-        0: "C",
-        1: "C#",
-        2: "D",
-        3: "D#",
-        4: "E",
-        5: "F",
-        6: "F#",
-        7: "G",
-        8: "G#",
-        9: "A",
-        10: "A#",
-        11: "B"
-    }
-    
-    return int_to_note_dict.get(number, "Invalid note")  # Returns "Invalid note" if the number is not in range

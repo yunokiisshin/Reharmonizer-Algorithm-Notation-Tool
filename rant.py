@@ -1,3 +1,4 @@
+from music21 import *
 from utils import *
 import random
 
@@ -31,7 +32,7 @@ def rant(progression, level):
     
     # fit the progression into the format of Notation
     formatted_progression = formatProgression(progression)
-    print(formatted_progression)
+    # print(formatted_progression)
     
     if level == 0:
         new_prog = simplifyChords(formatted_progression)
@@ -99,29 +100,11 @@ def turnIntoTriad(chord):
 
 
 
+
 # for level 2 process
-def substituteChords(progression, temperature=float):
+def substituteChords(progression):
     new_prog = progression.copy()
     
-    def tritoneSubstitution(chord):
-        root = chord.split(":")[0]
-        modifier = chord.split(":")[1]
-        tritone_root = getTritone(root)
-        return f"{tritone_root}:{modifier}"
-    
-    def getTritone(root):
-        # Mapping from root notes to their tritone counterparts
-        tritone_map = {
-            "C": "Gb", "C#": "G", "Db": "G", "D": "Ab", "D#": "A", "Eb": "A",
-            "E": "Bb", "F": "B", "F#": "C", "Gb": "C", "G": "Db", "G#": "D",
-            "Ab": "D", "A": "Eb", "A#": "E", "Bb": "E", "B": "F"
-        }
-        
-        if root in tritone_map:
-            return tritone_map[root]
-        else:
-            return root  # If not found in map, return the root as is
-
     # Iterate over each bar in the progression
     for bar in range(len(new_prog)):
         for i, chord in enumerate(new_prog[str(bar)]):
@@ -132,21 +115,84 @@ def substituteChords(progression, temperature=float):
                 altered_chord = tritoneSubstitution(chord)
                 # Replace the old chord with the new one
                 new_prog[str(bar)][i] = altered_chord
+            
+            if modifier == ("maj7" or "maj"):
+                altered_chord = tonicSubstitution(chord)
+                new_prog[str(bar)][i] = altered_chord
     
     return new_prog
     
     
+    
+'''Tritone substitution functionalities'''    
+def tritoneSubstitution(chord):
+        root = chord.split(":")[0]
+        modifier = chord.split(":")[1]
+        
+        def getTritone(root):
+            # Mapping from root notes to their tritone counterparts
+            tritone_map = {
+                "C": "Gb", "C#": "G", "Db": "G", "D": "Ab", "D#": "A", "Eb": "A",
+                "E": "Bb", "F": "B", "F#": "C", "Gb": "C", "G": "Db", "G#": "D",
+                "Ab": "D", "A": "Eb", "A#": "E", "Bb": "E", "B": "F"
+            }
+                
+            if root in tritone_map:
+                return tritone_map[root]
+            else:
+                return root  # If not found in map, return the root as is
+
+        tritone_root = getTritone(root)
+        return f"{tritone_root}:{modifier}"
+    
+
+
+
+'''
+A loose variant of tonic substitution; may alter chord function, 
+but it is interesting and coherent enough.
+It alters the "tonic" (vague as the key is unspecified), I, into iii or vi
+'''
+def tonicSubstitution(chord):
+    root = chord.split(":")[0]
+    modifier = chord.split(":")[1]
+    
+    root_pitch = pitch.Pitch(root)
+    root_midi = root_pitch.midi
+
+    if modifier == "maj7":    
+        # Randomly choose between iii and vi
+        if random.choice([True, False]):
+            new_pitch = pitch.Pitch()
+            new_pitch.midi = root_midi - 3
+            return f"{new_pitch.name}:min7"
+        else:
+            new_pitch = pitch.Pitch()
+            new_pitch.midi = root_midi + 4
+            return f"{new_pitch.name}:min7"
+    elif modifier == "maj":
+        if random.choice([True, False]):
+            new_pitch = pitch.Pitch()
+            new_pitch.midi = root_midi - 3
+            return f"{new_pitch.name}:min"
+        else:
+            new_pitch = pitch.Pitch()
+            new_pitch.midi = root_midi + 4
+            return f"{new_pitch.name}:min"
 
 # for level 3 process
 def reharmonize(progression):
     new_prog = progression.copy()
+    
     # Implement reharmonization logic
+    
+    
+    
+    
     return new_prog
 
 
 
-
-        
 
 
 
@@ -169,25 +215,3 @@ def constructRootList(progression):
 
 
 
-
-def main():
-    progression = {
-            "0": ["Am7"],
-            "1": ["D7"],
-            "2": ["GM9"],
-            "3": ["Cm7", "F7"],
-            "4": ["Bbmaj7"],
-            "5": ["Am7", "D7"],
-            "6": ["Gm7", "C7sus4"],
-            "7": ["FMaj7"]
-        }
-    print("before: ")
-    print(progression)
-    
-    new_prog = rant(progression, 2)
-    print("after: ")
-    print(new_prog)
-    return 
-
-if __name__ == "__main__":
-    main()
