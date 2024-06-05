@@ -3,7 +3,7 @@ from music21 import pitch, chord, note
 import random
 
 # Global constraints: note values shouldn't be too high nor too low
-LOWEST_NOTE = pitch.Pitch("C1").midi
+LOWEST_NOTE = pitch.Pitch("C2").midi
 HIGHEST_NOTE = pitch.Pitch("G5").midi
 GLOBAL_DOMAIN = list(range(LOWEST_NOTE, HIGHEST_NOTE + 1))
 
@@ -135,7 +135,7 @@ def produceAllNotes(progression=list, mode=str):
     for iteration in range(0, len(progression) - 1):
         solution = produceNotes(progression[iteration], progression[iteration+1], mode)
         if solution:
-            print("solution found")
+            # print("solution found")
             solutions.append(solution)
             notes_so_far.append(list(solution.values()))
             
@@ -200,7 +200,7 @@ def produceNotes(current_chord, next_chord, mode="simple"):
     elif mode == "jazz":
         # Craft a custom voicing for each chord
         jazz_voicings = {
-            "maj": [[0, 11, 14, 16, 19], # open studio jazz 
+            "maj": [[0, 11, 14, 16, 19], # open studio jazz
                     [0, 9, 11, 16, 19], 
                     [0, 7, 14, 19, 23], 
                     [0, 7, 9, 14, 16]],
@@ -222,7 +222,7 @@ def produceNotes(current_chord, next_chord, mode="simple"):
                     [0, 6, 9, 15, 18]],
         }
         
-        print("current_chord: " + current_chord)
+        # print("current_chord: " + current_chord)
         
         current_chord_root = current_chord.split(':')[0]
         current_chord_type = current_chord.split(':')[1]
@@ -263,28 +263,21 @@ def produceNotes(current_chord, next_chord, mode="simple"):
     elif mode == "rootless":
         
         rootless_voicings = {
-            "maj": [[9, 14, 19], # open studio jazz, PianoPig
-                    [0, 7, 11, 16, 19], 
-                    [0, 9, 14, 19, 23]],
-            "min": [[0, 10, 15, 21, 26],
-                    [0, 7, 10, 14, 17],
-                    [0, 3, 10, 14, 19],
-                    [0, 10, 14, 15, 21]], 
-            "7": [[0, 10, 16, 20, 25],
-                  [0, 10, 16, 20, 24],
-                  [0, 10, 14, 16, 19],
-                  [0, 10, 16, 21, 25]],
-            "9": [[0, 10, 16, 20, 25],
-                  [0, 10, 16, 20, 24],
-                  [0, 10, 14, 16, 19],
-                  [0, 10, 16, 21, 25]],
+            "maj": [[0, 9, 14, 19], # open studio jazz, PianoPig
+                    [0, 7, 11, 14, 16]], 
+            "min": [[0, 10, 14, 15, 19],
+                    [0, 3, 5, 10, 14]], 
+            "7": [[0, 4, 9, 10, 14],
+                  [0, 10, 14, 16]],
+            "9": [[0, 4, 9, 10, 14],
+                  [0, 10, 14, 16]],
             "dim": [[0, 6, 9, 17],  # Peter Martin
                     [0, 6, 9, 15, 20],
                     [0, 3, 6, 9, 12],
-                    [0, 6, 9, 15, 18]],
+                    [0, 6, 9, 15, 18]]
         }
-            
-            
+
+        
         print("current_chord: " + current_chord)
         
         current_chord_root = current_chord.split(':')[0]
@@ -292,16 +285,16 @@ def produceNotes(current_chord, next_chord, mode="simple"):
         
         if "maj" in current_chord_type:
             # randomly choose a voicing from maj voicings
-            chord_structure = jazz_voicings["maj"][random.randint(0, len(jazz_voicings["maj"]) - 1)]
+            chord_structure = rootless_voicings["maj"][random.randint(0, len(rootless_voicings["maj"]) - 1)]
             
         elif "min" in current_chord_type:
-            chord_structure = jazz_voicings["min"][random.randint(0, len(jazz_voicings["min"]) - 1)]
+            chord_structure = rootless_voicings["min"][random.randint(0, len(rootless_voicings["min"]) - 1)]
             
         elif "dim" in current_chord_type:
-            chord_structure = jazz_voicings["dim"][random.randint(0, len(jazz_voicings["dim"]) - 1)] 
+            chord_structure = rootless_voicings["dim"][random.randint(0, len(rootless_voicings["dim"]) - 1)] 
         
         elif "7" in current_chord_type:
-            chord_structure = jazz_voicings["7"][random.randint(0, len(jazz_voicings["7"]) - 1)]
+            chord_structure = rootless_voicings["7"][random.randint(0, len(rootless_voicings["7"]) - 1)]
         
         else:
             error = "Ooh I have not thought that far in"
@@ -321,21 +314,27 @@ def produceNotes(current_chord, next_chord, mode="simple"):
         # Ensure that each note is placed accordingly to the difference within chord_structure
         for i in range(1, len(note_vars)):
             problem.addConstraint(lambda n1, n2, interval=chord_structure[i]: n2 == n1 + interval, (note_vars[0], note_vars[i]))
-        
-    
     
     # elif mode == "drop2":
         
-        
+    # ensuring range
+    problem.addConstraint(MinSumConstraint(len(note_vars) * 50))
     solutions = problem.getSolutions()
+    
     if solutions:
         random_solution = random.choice(solutions)
         # print("Random solution:", random_solution)
+        
+        # remove root if it is rootless mode
+        if mode == "rootless":
+            random_solution.pop(f"{current_chord}_note_0")
     else: 
         error = "No solution found for produceNotes."
         raise ValueError(error)
     
-    return random_solution  
+    return random_solution
+
+
         
     
     
