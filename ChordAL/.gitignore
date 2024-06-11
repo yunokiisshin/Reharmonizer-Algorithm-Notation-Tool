@@ -1,0 +1,37 @@
+# Data files
+*.h5
+*.mscz
+*.abc
+*.txt
+*.log
+.idea
+*.PNG
+*.pyc
+.mid
+.npy
+venv/
+
+# Dataset Files
+dataset/McGill-BillBoard
+dataset/Nottingham
+dataset/Nottingham-Data
+dataset/Nottingham-midi
+dataset/Nottingham-Piano
+dataset/Nottingham-Piano-shifted
+dataset/Nottingham-shifted-midi
+dataset/csv-leadsheet
+dataset/*.mid
+evaluation/chord_samples
+evaluation/note_evaluation_results
+
+# Collections
+chord/collections/
+generator/collections/
+note/collections/
+
+# Showcase
+showcase/
+
+!architecture.png
+!logo-small.png
+!LICENSE.txt

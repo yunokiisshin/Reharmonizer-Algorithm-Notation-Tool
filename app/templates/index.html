@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Chord Progression Visualizer</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            display: block;
+        }
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        select, button {
+            margin-right: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <select id="row1Count">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <select id="row2Count">
+            <option value="simple">simple</option>
+            <option value="smooth">smooth</option>
+            <option value="jazz">jazz</option>
+            <option value="rootless">rootless</option>
+        </select>
+        <button id="generateBtn">Generate</button>
+    </div>
+    <canvas id="chordCanvas"></canvas>
+    <script src="../static/js/script.js"></script>
+</body>
+</html>
