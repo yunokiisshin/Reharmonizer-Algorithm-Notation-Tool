@@ -1,19 +1,25 @@
 from music21 import *
+
+# custom implemented app.modules
+from modules.rant import *
+from modules.noteSolver import *
+from modules.utils import *
+
 from openai import OpenAI
+
 import os
 from dotenv import load_dotenv
 import json
 
-# Custom imports (replace with actual implementations)
-from modules.rant import *
-from modules.noteSolver import *
-
 def string_to_dict(string):
     try:
-        return json.loads(string)
+        # Convert the string to a dictionary
+        result_dict = json.loads(string)
+        return result_dict
     except json.JSONDecodeError as e:
         print(f"An error occurred: {e}")
         return None
+
 
 def formatProgression(progression):
     formatted_progression = {}
@@ -50,9 +56,21 @@ def formatChord(chord):
     formatted_chord = root + ":" + remainder.lower()
     
     return formatted_chord
+    
 
-def generate_chord_symbols(prompt, client):
+
+def generate_chord_symbols(prompt):
     try:
+        
+        client = OpenAI(
+            # This is the default and can be omitted
+            api_key=os.environ.get("OPENAI_API_KEY"),
+)
+        
+        if not client:
+            raise ValueError("OpenAI API key is not set in environment variables.")
+
+        # few-shot prompt
         response = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": "You are a professional musician and music theorist. Your job is to create a good 8-bar chord progression in C, suited to the genre. Only provide the strings as shown in the examples. Be creative, but not too odd. Take care of musical qualities. Don't always start with C; don't overly use 2-5-1. Do not use the character ø; replace it with b5 notation. Allowed chord symbols are \"maj\", \"min\", \"dim\", \"aug\", \"maj7\", \"min7\", \"7\", \"dim7\", \"hdim7\", \"minmaj7\", \"maj6\", \"min6\", \"9\", \"maj9\", \"min9\", \"sus4\". DO NOT OUTPUT ANYTHING BUT 8 BARS OF CHORD SYMBOLS."},
@@ -63,76 +81,67 @@ def generate_chord_symbols(prompt, client):
                 {"role": "user", "content": prompt}
             ],
             model="gpt-4",
-            temperature=1,
+            temperature = 0.5  # experiment with the value; smaller to get less random results
         )
+        # print("response: " + response.choices[0].message['content'])
         return response.choices[0].message.content
+    
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
 
-def save_to_file(data, filename):
-    with open(filename, 'w') as file:
-        json.dump(data, file)
 
-def load_from_file(filename):
-    with open(filename, 'r') as file:
-        return json.load(file)
 
-def create_voicing_selection_dict(data):
-    if isinstance(data, dict):
-        return {k: create_voicing_selection_dict(v) for k, v in data.items()}
-    elif isinstance(data, list):
-        return ["1" for _ in data]
-    else:
-        return "1"
 
-def save_voicings_to_file(voicings, filename):
-    with open(filename, 'w') as file:
-        json.dump(voicings, file)
-
-def load_voicings_from_file(filename):
-    with open(filename, 'r') as file:
-        return json.load(file)
-
-def generate_chords(filename):
+def main():
+    # progression = {
+    #     "0": ["Dmin7"],
+    #     "1": ["G7"],
+    #     "2": ["Cmaj7"],
+    #     "3": ["Amin7", "Fdim7"],
+    #     "4": ["Dmin7"],
+    #     "5": ["G7sus4"],
+    #     "6": ["Cmaj7"],
+    #     "7": ["Cmaj7"]
+    # }
+    
     load_dotenv()
-    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
     
-    if not client:
-        raise ValueError("OpenAI API key is not set in environment variables.")
+    progression_raw = string_to_dict(generate_chord_symbols("give me a jazz chord progression"))
+    print("progression_raw: ")
+    print(progression_raw)
     
-    progression_raw = string_to_dict(generate_chord_symbols("give me a jazz chord progression", client))
-    save_to_file(progression_raw, filename)
-
-def process_chords(filename):
-    progression_raw = load_from_file(filename)
+    # fit the progression into the format of Notation
     formatted_progression = formatProgression(progression_raw)
     
+    # print("formatted progression: ")
+    # print(formatted_progression)
+    
     list_of_chords = [item for sublist in list(formatted_progression.values()) for item in sublist]
+    print(list_of_chords)
     while None in list_of_chords:
         print("None found in progression. Rerunning...")
         list_of_chords = [item for sublist in list(formatted_progression.values()) for item in sublist]
     
     new_prog = rant(formatted_progression, 1)
-    print("new_prog:")
+    print("after rant: ")
     print(new_prog)
+    
     chords_list = [item for sublist in list(new_prog.values()) for item in sublist]
-    
-    voicings_dict = create_voicing_selection_dict(formatted_progression)
-    list_of_voicings = [item for sublist in list(voicings_dict.values()) for item in sublist]
-    save_voicings_to_file(list_of_voicings, 'voicings.json')
-    
-    print(list_of_voicings)
     
     solution_found = False
     while not solution_found:
         try:
-            formatted_solution = produceAllNotes(chords_list, "simple", list_of_voicings)
+            print()
+            formatted_solution = produceAllNotes(chords_list, "simple")
             solution_found = True
         except ValueError as e:
             print(f"Error occurred: {e}. Retrying...")
     
+    # for keeping track
     chord_index = 0
+    
+    # craft a midi file to hear the result
     music_stream = stream.Stream()
     
     for key in formatted_progression.keys():
@@ -140,23 +149,13 @@ def process_chords(filename):
             c = chord.Chord(formatted_solution[chord_index], duration=duration.Duration(4.0 / len(formatted_progression[key])))
             music_stream.append(c)
             chord_index += 1
-    
+
+    print("Chords list:", chords_list)
+    print("Formatted solution:", formatted_solution)
     music_stream.write("midi", "output.mid")
+    
 
 if __name__ == "__main__":
-    import argparse
+    main()
 
-    parser = argparse.ArgumentParser(description="Chord Progression Generator")
-    parser.add_argument('action', nargs='?', choices=['generate', 'process'], help="Action to perform")
-    parser.add_argument('filename', nargs='?', default="sample.json", help="Filename for storing/loading chord progression")
 
-    args = parser.parse_args()
-
-    if args.action is None:
-        generate_chords(args.filename)
-        process_chords(args.filename)
-    else:
-        if args.action == 'generate':
-            generate_chords(args.filename)
-        elif args.action == 'process':
-            process_chords(args.filename)

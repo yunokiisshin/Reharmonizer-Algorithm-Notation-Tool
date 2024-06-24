@@ -2,6 +2,8 @@ from constraint import *
 from music21 import pitch, chord, note
 import random
 
+import json
+
 # Global constraints: note values shouldn't be too high nor too low
 LOWEST_NOTE = pitch.Pitch("C2").midi
 HIGHEST_NOTE = pitch.Pitch("G5").midi
@@ -21,8 +23,8 @@ def fill_dict_value(note_dict, key, note):
         note_val.midi += 12
 
 def prepare_note_dict(root_note, chord_type):
-    print("processing root_note: " + root_note)
-    print("processing chord_type: " + chord_type)
+    # print("processing root_note: " + root_note)
+    # print("processing chord_type: " + chord_type)
     note_dict = dict([("root", []), ("third", []), ("fifth", []), ("seventh", []), ("ninth", []), ("extensions", [])])
     
     root = pitch.Pitch(root_note)
@@ -129,17 +131,23 @@ def prepare_note_dict(root_note, chord_type):
 
 # Solver Wrapper
 # mode: "simple", "jazz", "rootless", "drop2", etc, check if implemented. This is where customizations can be made.
-def produceAllNotes(progression=list, mode=str):
+def produceAllNotes(progression=list, mode=str, list_of_voicings=list):
     list_of_all_notes = []
     notes_so_far = []
-    mode_possibilities = ["simple", "jazz", "rootless", "smooth"]
+    mode_possibilities = ["simple", "jazz", "rootless", "smooth", "custom"]
     
     if mode not in mode_possibilities:
         error = "mode not recognized in produceAllNotes"
         raise ValueError(error)
     
+    voicing_modes = translateVoicing(list_of_voicings)
+    print(voicing_modes)
+    
     for iteration in range(0, len(progression)):
-        solution = produceNotes(progression[iteration], notes_so_far, mode)
+        if mode == "custom":
+            solution = produceNotes(progression[iteration], notes_so_far, voicing_modes[iteration])
+        else:
+            solution = produceNotes(progression[iteration], notes_so_far, mode)
         if solution:
             # print("solution found")
             notes_so_far.append(solution)
@@ -159,7 +167,7 @@ def produceAllNotes(progression=list, mode=str):
 
 
 # CSP Solver function
-def produceNotes(current_chord, notes_so_far=list, mode="simple"):
+def produceNotes(current_chord, notes_so_far=list, mode="simple", list_of_voicings=list):
 
     problem = Problem()
     
@@ -361,8 +369,6 @@ def produceNotes(current_chord, notes_so_far=list, mode="simple"):
             # Add constraints to ensure notes are ordered from small to big
             for k in range(len(note_vars) - 1):
                 problem.addConstraint(lambda n1, n2: n1 < n2, (note_vars[k], note_vars[k+1]))
-            
-            
         
         
     else:
@@ -407,4 +413,19 @@ def produceNotes(current_chord, notes_so_far=list, mode="simple"):
         raise ValueError(error)
 
 
+def translateVoicing(list_of_voicings):
+    # This function is used to translate the list number into assigned strings; for example, 1 -> "simple", 2 -> "jazz", 3 -> "rootless", 4 -> "smooth".
+    # This is used to make the code more readable and user-friendly.
+    translation = {
+        "1": "simple",
+        "2": "jazz",
+        "3": "rootless",
+        "4": "smooth"
+    }
+    
+    return [translation[voicing] for voicing in list_of_voicings]
 
+
+def load_voicings_from_file(filename):
+    with open(filename, 'r') as file:
+        return json.load(file)

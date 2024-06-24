@@ -1,5 +1,5 @@
 from music21 import *
-from app.modules.utils import *
+from modules.utils import *
 import random
 
 '''
@@ -34,16 +34,13 @@ def rant(formatted_progression, level):
         new_prog = simplifyChords(formatted_progression)
         return new_prog
     
-    if level == 1:
+    elif level == 1:
         return formatted_progression
 
-    if level == 2:
+    elif level == 2:
         new_prog = substituteChords(formatted_progression)
         return new_prog
-    
-    if level == 3:
-        new_prog = reharmonize(formatted_progression)
-        return new_prog
+
     
 
 
@@ -96,35 +93,6 @@ returns:
 # for level 2 process
 def substituteChords(progression):
     new_prog = progression.copy()
-
-    # print("new_prog: ")
-    # print(new_prog)
-    
-    # Iterate over each bar in the progression
-    for bar in range(len(new_prog)):
-        for i, chord in enumerate(new_prog[str(bar)]):
-            root = chord.split(":")[0]
-            modifier = chord.split(":")[1]
-            # Check for tritone substitution conditions
-            if modifier == "7" or modifier == "9": 
-                altered_chord = tritoneSubstitution(chord) if random.choice([True, False, False]) else chord
-                # Replace the old chord with the new one
-                new_prog[str(bar)][i] = altered_chord
-            
-            # if modifier == ("maj7" or "maj"):
-            #     altered_chord = tonicSubstitution(chord) if random.choice([True, False]) else chord
-            #     new_prog[str(bar)][i] = altered_chord
-                
-            if modifier == "min7": # modal substitution
-                altered_chord = dominantSubstitution(chord) if random.choice([True, False, False]) else chord
-                new_prog[str(bar)][i] = altered_chord
-    
-    return new_prog
-    
-    
-# for level 3 process
-def reharmonize(progression):
-    new_prog = progression.copy()
     print("in level 2")
     print("new_prog: ")
     print(new_prog)
@@ -139,12 +107,17 @@ def reharmonize(progression):
                 # Replace the old chord with the new one
                 new_prog[str(bar)][i] = altered_chord
             
-            if modifier == ("maj7" or "maj"):
+            elif modifier == ("maj7" or "maj"):
                 altered_chord = tonicSubstitution(chord) if random.choice([True, False]) else chord
                 new_prog[str(bar)][i] = altered_chord
                 
-            if modifier == "min7":
-                altered_chord = dominantSubstitution(chord)
+            elif modifier == "min7":
+                altered_chord = dominantModalSubstitution(chord)
+                new_prog[str(bar)][i] = altered_chord
+            
+            # happens at random
+            if random.choice([True, False]) and ("maj" not in modifier):
+                altered_chord = lowerByMajorThird(chord)
                 new_prog[str(bar)][i] = altered_chord
     
     return new_prog
@@ -264,7 +237,7 @@ def tonicSubstitution(chord):
             return f"{new_pitch.name}:min"
 
 
-def dominantSubstitution(chord):
+def dominantModalSubstitution(chord):
     root = chord.split(":")[0]
     modifier = chord.split(":")[1]
     
@@ -273,7 +246,12 @@ def dominantSubstitution(chord):
     print("dominant sub! new chord: ", new_chord)
     return new_chord
 
-
+def lowerByMajorThird(chord):
+    root = chord.split(":")[0]
+    modifier = chord.split(":")[1]
+    root_pitch = pitch.Pitch(root)
+    root_pitch.midi -= 4
+    return f"{root_pitch.name}:{modifier}"
 
 
 
